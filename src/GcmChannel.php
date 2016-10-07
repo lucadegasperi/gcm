@@ -39,40 +39,44 @@ class GcmChannel
      */
     public function send($notifiable, Notification $notification)
     {
-        $tokens = (array) $notifiable->routeNotificationFor('gcm');
-        if (! $tokens) {
+        $devices = (array) $notifiable->routeNotificationFor('gcm');
+        if (! $devices) {
             return;
         }
 
-        $message = $notification->toGcm($notifiable);
-        if (! $message) {
-            return;
-        }
+        foreach ($devices as $device) {
+            $deviceToken = ($device instanceof ApnDeviceInterface) ? $device->getToken() : $device;
 
-        $packet = $this->getPacket($tokens, $message);
+            $message = $notification->toGcm($notifiable, $device);
+            if (! $message) {
+                continue;
+            }
 
-        try {
-            $response = $this->client->send($packet);
-        } catch (Exception $exception) {
-            throw SendingFailed::create($exception);
-        }
+            $packet = $this->getPacket($deviceToken, $message);
 
-        if (! $response->getFailureCount() == 0) {
-            $this->handleFailedNotifications($notifiable, $notification, $response);
+            try {
+                $response = $this->client->send($packet);
+            } catch (Exception $exception) {
+                throw SendingFailed::create($exception);
+            }
+
+            if (! $response->getFailureCount() == 0) {
+                $this->handleFailedNotifications($notifiable, $notification, $response);
+            }
         }
     }
 
     /**
-     * @param $tokens
+     * @param $token
      * @param $message
      *
      * @return \NotificationChannels\Gcm\Packet
      */
-    protected function getPacket($tokens, $message)
+    protected function getPacket($token)
     {
         $packet = new Packet();
 
-        $packet->setRegistrationIds($tokens);
+        $packet->setRegistrationIds([$token]);
         $packet->setCollapseKey(str_slug($message->title));
         $packet->setData([
                 'title' => $message->title,
