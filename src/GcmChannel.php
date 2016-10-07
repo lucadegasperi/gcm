@@ -45,7 +45,7 @@ class GcmChannel
         }
 
         foreach ($devices as $device) {
-            $deviceToken = ($device instanceof ApnDeviceInterface) ? $device->getToken() : $device;
+            $deviceToken = ($device instanceof GcmDeviceInterface) ? $device->getToken() : $device;
 
             $message = $notification->toGcm($notifiable, $device);
             if (! $message) {
