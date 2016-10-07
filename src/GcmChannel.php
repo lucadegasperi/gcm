@@ -39,7 +39,7 @@ class GcmChannel
      */
     public function send($notifiable, Notification $notification)
     {
-        $devices = (array) $notifiable->routeNotificationFor('gcm');
+        $devices = $notifiable->routeNotificationFor('gcm');
         if (! $devices) {
             return;
         }
