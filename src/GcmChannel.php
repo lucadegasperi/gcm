@@ -72,7 +72,7 @@ class GcmChannel
      *
      * @return \NotificationChannels\Gcm\Packet
      */
-    protected function getPacket($token)
+    protected function getPacket($token, $message)
     {
         $packet = new Packet();
 
