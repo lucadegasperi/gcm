@@ -53,15 +53,19 @@ class GcmChannel
             }
 
             $packet = $this->getPacket($deviceToken, $message);
+            
+            if(config('broadcasting.connections.gcm.environment') == 'pretend') {
+                \Log::info('Sending GCM Notification To: ' . $deviceToken);
+            } else {
+                try {
+                    $response = $this->client->send($packet);
+                } catch (Exception $exception) {
+                    throw SendingFailed::create($exception);
+                }
 
-            try {
-                $response = $this->client->send($packet);
-            } catch (Exception $exception) {
-                throw SendingFailed::create($exception);
-            }
-
-            if (! $response->getFailureCount() == 0) {
-                $this->handleFailedNotifications($notifiable, $notification, $response);
+                if (! $response->getFailureCount() == 0) {
+                    $this->handleFailedNotifications($notifiable, $notification, $response);
+                }
             }
         }
     }
